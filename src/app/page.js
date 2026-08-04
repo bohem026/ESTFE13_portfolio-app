@@ -4,8 +4,8 @@ import { Suspense } from 'react';
 
 export default async function Page() {
   const supabase = await createClient();
-  const { data: project, error } = await supabase.from('portfolio').select();
-  console.log(portfolio);
+  const { data: projects, error } = await supabase.from('portfolio').select();
+  console.log(projects);
 
   if (error) {
     console.error('연결실패', error);
