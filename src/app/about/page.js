@@ -1,6 +1,6 @@
 export default function About() {
   return (
-    <div class="about_content shadow">
+    <div className="about_content shadow">
       <h3 className="heading6">About Me</h3>
       <p className="narrow-p">
         I&apos;m a web designer based in Romania. I create clean websites, love Apple products and I&apos;m a big fan of
