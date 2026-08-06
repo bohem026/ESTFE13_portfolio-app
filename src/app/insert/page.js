@@ -1,7 +1,7 @@
 'use client';
 
 import { createClient } from '@/utils/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Insert() {
@@ -21,6 +21,22 @@ export default function Insert() {
     thumbnail: '',
   });
 
+  const [thumbnail, setThumbnail] = useState(null);
+  const [user, setUser] = useState(null);
+  const [authForm, setAuthForm] = useState({
+    email: '',
+    password: '',
+  });
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    })();
+  }, [supabase.auth]);
+
   async function insertData(e) {
     e.preventDefault();
     const { error } = await supabase.from('portfolio').insert(formData);
@@ -30,8 +46,11 @@ export default function Insert() {
       console.log('데이터 입력 성공');
       router.push('/');
     }
+    if (thumbnail) {
+      await uploadThumbnail(thumbnail);
+    }
   }
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -40,6 +59,45 @@ export default function Insert() {
       [name]: value,
     });
   };
+
+  const handleFileChange = (e) => {
+    setThumbnail(e.target.files[0]);
+  };
+
+  async function uploadThumbnail(file) {
+    const { data, error } = await supabase.storage.from('portfolio').upload(`thumbnail/${file.name}`, file);
+    if (error) {
+      // Handle error
+      console.error('파일 업로드 실패:', error);
+    } else {
+      // Handle success
+      console.log('파일 업로드 성공:');
+    }
+  }
+
+  // 유저 정보 없을 경우 로그인 창으로 이동
+  if (!user) {
+    return (
+      <div className="about_content">
+        <h2>관리자 로그인</h2>
+        <div className="contact_form">
+          <form action="">
+            <p className="field">
+              <label htmlFor="email">이메일</label>
+              <input type="email" id="email" name="email" placeholder="이메일" />
+            </p>
+            <p className="field">
+              <label htmlFor="password">비밀번호</label>
+              <input type="password" id="password" name="password" placeholder="비밀번호" />
+            </p>
+            <p className="submit">
+              <input type="submit" className="primary-btn" value="로그인" />
+            </p>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="about_content shadow">
@@ -99,7 +157,7 @@ export default function Insert() {
           </p>
           <p className="field">
             <label htmlFor="thumbnail">썸네일:</label>
-            <input type="file" id="thumbnail" name="thumbnail" accept="image/*" />
+            <input type="file" id="thumbnail" name="thumbnail" accept="image/*" onChange={handleFileChange} />
           </p>
           <p className="submit">
             <input type="submit" className="primary-btn" value="등록" />
