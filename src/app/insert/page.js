@@ -45,6 +45,8 @@ export default function Insert() {
     } else {
       console.log('데이터 입력 성공');
       router.push('/');
+      // 강제 새로고침
+      router.refresh();
     }
     if (thumbnail) {
       await uploadThumbnail(thumbnail);
@@ -67,10 +69,13 @@ export default function Insert() {
 
   const handleFileChange = (e) => {
     setThumbnail(e.target.files[0]);
+    console.log(e.target.files[0]);
   };
 
   async function uploadThumbnail(file) {
-    const { data, error } = await supabase.storage.from('portfolio').upload(`thumbnail/${file.name}`, file);
+    const ext = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${ext}`;
+    const { data, error } = await supabase.storage.from('portfolio').upload(`thumbnail/${fileName}`, file);
     if (error) {
       // Handle error
       console.error('파일 업로드 실패:', error);
@@ -88,6 +93,7 @@ export default function Insert() {
       alert('로그인 실패', error.message);
     } else {
       alert('로그인 성공');
+      setUser(data.user);
       // 강제 새로고침
       router.refresh();
     }
