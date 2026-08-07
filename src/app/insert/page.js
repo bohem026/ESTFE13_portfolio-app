@@ -1,7 +1,6 @@
 'use client';
-
 import { createClient } from '@/utils/supabase/client';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Insert() {
@@ -23,7 +22,7 @@ export default function Insert() {
 
   const [thumbnail, setThumbnail] = useState(null);
   const [user, setUser] = useState(null);
-  const [authForm, setAuthForm] = useState({
+  const [authForm, setAuthform] = useState({
     email: '',
     password: '',
   });
@@ -39,20 +38,25 @@ export default function Insert() {
 
   async function insertData(e) {
     e.preventDefault();
-    const { error } = await supabase.from('portfolio').insert(formData);
+    //파일 업로드 후 경로 저장
+    let thumbnailPath = null;
+    if (thumbnail) {
+      thumbnailPath = await uploadThumbnail(thumbnail);
+      if (!thumbnailPath) {
+        alert('파일 업로드 실패');
+        return; //파일 업로드 실패시 글 등록 취소
+      }
+    }
+
+    const { error } = await supabase.from('portfolio').insert({ ...formData, thumbnail: thumbnailPath });
     if (error) {
       console.log(error);
     } else {
       console.log('데이터 입력 성공');
       router.push('/');
-      // 강제 새로고침
       router.refresh();
     }
-    if (thumbnail) {
-      await uploadThumbnail(thumbnail);
-    }
   }
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -64,7 +68,7 @@ export default function Insert() {
 
   const handleAuthChange = (e) => {
     const { name, value } = e.target;
-    setAuthForm((prev) => ({ ...prev, [name]: value }));
+    setAuthform((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
@@ -74,18 +78,19 @@ export default function Insert() {
 
   async function uploadThumbnail(file) {
     const ext = file.name.split('.').pop();
-    const fileName = `${crypto.randomUUID()}.${ext}`;
-    const { data, error } = await supabase.storage.from('portfolio').upload(`thumbnail/${fileName}`, file);
+    const filePath = `thumbnail/${crypto.randomUUID()}.${ext}`;
+
+    const { data, error } = await supabase.storage.from('portfolio').upload(filePath, file);
     if (error) {
       // Handle error
       console.error('파일 업로드 실패:', error);
     } else {
       // Handle success
       console.log('파일 업로드 성공:');
+      return filePath;
     }
   }
-
-  // 로그인 진행
+  //로그인 진행
   const handleLogin = async (e) => {
     e.preventDefault();
     const { data, error } = await supabase.auth.signInWithPassword(authForm);
@@ -94,21 +99,19 @@ export default function Insert() {
     } else {
       alert('로그인 성공');
       setUser(data.user);
-      // 강제 새로고침
       router.refresh();
     }
   };
 
-  // 유저 정보 없을 경우 로그인 창으로 이동
   if (!user) {
     return (
-      <div className="about_content">
+      <div className="about_content shadow">
         <h2>관리자 로그인</h2>
         <div className="contact_form">
           <form onSubmit={handleLogin}>
             <p className="field">
               <label htmlFor="email">이메일</label>
-              <input type="email" id="email" name="email" placeholder="이메일" required onChange={handleAuthChange} />
+              <input type="email" id="email" name="email" placeholder="email" required onChange={handleAuthChange} />
             </p>
             <p className="field">
               <label htmlFor="password">비밀번호</label>
@@ -129,7 +132,6 @@ export default function Insert() {
       </div>
     );
   }
-
   return (
     <div className="about_content shadow">
       <h2 className="mb-3">데이터 입력</h2>
