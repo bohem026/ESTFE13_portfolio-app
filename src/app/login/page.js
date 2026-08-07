@@ -29,8 +29,32 @@ export default function Login() {
     }
   };
 
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) {
+      console.error('로그인 실패: ', error.message);
+    }
+  };
+
+  const signInWithKakao = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) {
+      console.error('로그인 실패: ', error.message);
+    }
+  };
+
   return (
-    <div className="about_content">
+    <div className="about_content shadow">
       <h2>로그인</h2>
       <div className="contact_form">
         <form onSubmit={handleLogin}>
@@ -53,6 +77,9 @@ export default function Login() {
             <input type="submit" className="primary-btn" value="로그인" />
           </p>
         </form>
+        <hr />
+        <button onClick={signInWithGoogle}>구글로 로그인</button>
+        <button onClick={signInWithKakao}>카카오로 로그인</button>
       </div>
     </div>
   );
